@@ -8,7 +8,8 @@ import {
   Body,
   HttpException,
   HttpStatus,
-  ImATeapotException
+  ImATeapotException,
+  UseFilters,
 } from '@nestjs/common';
 import { of, Observable } from 'rxjs';
 // import { Request } from 'express';
@@ -16,8 +17,10 @@ import { CreateCatDto } from './create-cat.dto';
 import { CatsService } from './cats.service';
 import { Cat } from './interfaces/cat.interface';
 import { CustomForbiddenException } from '../exceptions/customForbidden.exception';
+import { HttpExceptionFilter } from '../filters/http-exception.filter';
 
 @Controller('cats')
+@UseFilters(HttpExceptionFilter) //exception filters can be method scoped (use decorator above method), controller scoped (use decorator above class), or global scope (add in main.ts)
 export class CatsController {
   constructor(private catsService: CatsService) {} //
 
@@ -68,7 +71,7 @@ export class CatsController {
   }
 
   @Get('teapot')
-  async testTeapot(){
+  async testTeapot() {
     throw new ImATeapotException();
   }
 
