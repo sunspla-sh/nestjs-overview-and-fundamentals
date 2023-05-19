@@ -10,21 +10,26 @@ import {
   HttpStatus,
   ImATeapotException,
   UseFilters,
+  UsePipes,
+  ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { of, Observable } from 'rxjs';
 // import { Request } from 'express';
 import { CreateCatDto } from './create-cat.dto';
 import { CatsService } from './cats.service';
-import { Cat } from './interfaces/cat.interface';
+import { Cat, createCatSchema } from './interfaces/cat.interface';
 import { CustomForbiddenException } from '../exceptions/customForbidden.exception';
 import { HttpExceptionFilter } from '../filters/http-exception.filter';
+import { JoiValidationPipe } from '../pipes/joiValidation.pipe';
 
 @Controller('cats')
-@UseFilters(HttpExceptionFilter) //exception filters can be method scoped (use decorator above method), controller scoped (use decorator above class), or global scope (add in main.ts)
+// @UseFilters(HttpExceptionFilter) //exception filters can be method scoped (use decorator above method), controller scoped (use decorator above class), or global scope (add in main.ts)
 export class CatsController {
   constructor(private catsService: CatsService) {} //
 
   @Post()
+  @UsePipes(new JoiValidationPipe(createCatSchema))
   async create(@Body() createCatDto: CreateCatDto) {
     // it is preferable to use classes as data transfer objects over typescript interfaces
     // because the classes exist in the final transpiled javascript and can be used
@@ -42,6 +47,11 @@ export class CatsController {
   @Get()
   async findAll(): Promise<Cat[]> {
     return this.catsService.findAll();
+  }
+
+  @Get('query')
+  async findOneQuery(@Query('id', ParseIntPipe) id: string) {
+    return `This action returns a #${id} cat`;
   }
 
   @Get('neoncats')
@@ -76,7 +86,15 @@ export class CatsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): string {
+  //by passing a class, we leave responsibility for instantiation to the framework and also enable dependency injection
+  // findOne(@Param('id', ParseIntPipe) id: string): string {
+  findOne(
+    @Param(
+      'id',
+      new ParseIntPipe({ errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE }),
+    ) //passing an in-place instance is useful if we want to customize the built-in pipe's behavior by passing options
+    id: string,
+  ): string {
     console.log(id);
     return `This action returns a #${id} cat`;
   }
