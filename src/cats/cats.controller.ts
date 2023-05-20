@@ -12,7 +12,11 @@ import {
   UseFilters,
   UsePipes,
   ParseIntPipe,
+  ParseBoolPipe,
   Query,
+  DefaultValuePipe,
+  UseGuards,
+  SetMetadata,
 } from '@nestjs/common';
 import { of, Observable } from 'rxjs';
 // import { Request } from 'express';
@@ -20,16 +24,25 @@ import { CreateCatDto } from './create-cat.dto';
 import { CatsService } from './cats.service';
 import { Cat, createCatSchema } from './interfaces/cat.interface';
 import { CustomForbiddenException } from '../exceptions/customForbidden.exception';
-import { HttpExceptionFilter } from '../filters/http-exception.filter';
-import { JoiValidationPipe } from '../pipes/joiValidation.pipe';
+// import { HttpExceptionFilter } from '../filters/http-exception.filter';
+// import { JoiValidationPipe } from '../pipes/joiValidation.pipe';
+// import { ValidationPipe } from 'src/pipes/validation.pipe';
+// import { AuthGuard } from 'src/guards/auth.guard';
+// import { RolesGuard } from 'src/guards/roles.guard';
+import { Roles } from 'src/decorators/roles.decorator';
 
 @Controller('cats')
 // @UseFilters(HttpExceptionFilter) //exception filters can be method scoped (use decorator above method), controller scoped (use decorator above class), or global scope (add in main.ts)
+// @UseGuards(AuthGuard)
+// @UseGuards(RolesGuard)
 export class CatsController {
   constructor(private catsService: CatsService) {} //
 
   @Post()
-  @UsePipes(new JoiValidationPipe(createCatSchema))
+  // @SetMetadata('roles', ['admin'])
+  @Roles('admin')
+  // @UsePipes(new JoiValidationPipe(createCatSchema)) //we can use our validation pipes at the method level
+  // async create(@Body(new ValidationPipe()) createCatDto: CreateCatDto) { //or we can use our validation pipes at the parameter level
   async create(@Body() createCatDto: CreateCatDto) {
     // it is preferable to use classes as data transfer objects over typescript interfaces
     // because the classes exist in the final transpiled javascript and can be used
@@ -52,6 +65,15 @@ export class CatsController {
   @Get('query')
   async findOneQuery(@Query('id', ParseIntPipe) id: string) {
     return `This action returns a #${id} cat`;
+  }
+
+  @Get('page')
+  findAllPage(
+    @Query('activeOnly', new DefaultValuePipe(false), ParseBoolPipe)
+    activeOnly: boolean,
+    @Query('page', new DefaultValuePipe(0), ParseIntPipe) page: number,
+  ): string {
+    return `The activeOnly status is ${activeOnly} and the page is ${page}.`;
   }
 
   @Get('neoncats')

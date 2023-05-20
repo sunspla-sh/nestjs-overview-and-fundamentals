@@ -11,6 +11,11 @@ import { LoggerMiddleware } from './common/logger.middleware';
 import { loggerFunctionalMiddleware } from './common/loggerFunctional.middleware';
 import { CatsController } from './cats/cats.controller';
 
+import { ValidationPipe } from './pipes/validation.pipe';
+import { APP_PIPE, APP_GUARD } from '@nestjs/core';
+// import { RolesGuard } from './guards/roles.guard';
+import { TestRolesGuard } from './guards/testRoles.guard';
+
 /**
  * There is no place for the middleware in the @Module() decorator. Instead, we set them up using the configure() method of the module class.
  * Modules that include middleware must implement the NestModule interface.
@@ -19,7 +24,21 @@ import { CatsController } from './cats/cats.controller';
 @Module({
   imports: [CatsModule],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    // {
+    //   provide: APP_GUARD,
+    //   useClass: RolesGuard,
+    // },
+    {
+      provide: APP_GUARD,
+      useClass: TestRolesGuard,
+    },
+    {
+      provide: APP_PIPE, //when using this approach, the pipe is infact global no matter which module we use to register it
+      useClass: ValidationPipe, //so it is best to choose to register it in the module in which the pipe is defined
+    },
+  ],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
