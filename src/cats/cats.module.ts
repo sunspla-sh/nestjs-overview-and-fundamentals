@@ -1,6 +1,8 @@
 import { Module, Global } from '@nestjs/common';
 import { CatsController } from './cats.controller';
 import { CatsService } from './cats.service';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { ErrorsInterceptor } from 'src/interceptors/errors.interceptor';
 
 /*
   Every module is automatically a shared module
@@ -13,7 +15,13 @@ import { CatsService } from './cats.service';
 @Global()
 @Module({
   controllers: [CatsController],
-  providers: [CatsService],
+  providers: [
+    CatsService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ErrorsInterceptor,
+    },
+  ],
   exports: [CatsService], //by adding the CatsService provider to the exports array, we can share the instance between other modules
 })
 export class CatsModule {}

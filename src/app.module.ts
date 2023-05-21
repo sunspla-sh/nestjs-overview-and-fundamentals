@@ -12,9 +12,10 @@ import { loggerFunctionalMiddleware } from './common/loggerFunctional.middleware
 import { CatsController } from './cats/cats.controller';
 
 import { ValidationPipe } from './pipes/validation.pipe';
-import { APP_PIPE, APP_GUARD } from '@nestjs/core';
+import { APP_PIPE, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 // import { RolesGuard } from './guards/roles.guard';
 import { TestRolesGuard } from './guards/testRoles.guard';
+import { LoggingInterceptor } from './interceptors/logging.interceptor';
 
 /**
  * There is no place for the middleware in the @Module() decorator. Instead, we set them up using the configure() method of the module class.
@@ -33,6 +34,10 @@ import { TestRolesGuard } from './guards/testRoles.guard';
     {
       provide: APP_GUARD,
       useClass: TestRolesGuard,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: LoggingInterceptor,
     },
     {
       provide: APP_PIPE, //when using this approach, the pipe is infact global no matter which module we use to register it

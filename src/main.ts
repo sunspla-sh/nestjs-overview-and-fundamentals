@@ -4,6 +4,7 @@ import { AppModule } from './app.module';
 import { globalFunctionalMiddleware } from './common/globalFunctional.middleware';
 // import { ValidationPipe } from './pipes/validation.pipe';
 import { RolesGuard } from './guards/roles.guard';
+import { LoggingInterceptor } from './interceptors/logging.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -27,6 +28,12 @@ async function bootstrap() {
    * In order to solve this issue, we can set up a guard directly in any module.
    */
   // app.useGlobalGuards(new RolesGuard());
+  /**
+   * Register a generic global interceptor across the whole application for every controller and route handler.
+   * Global interceptors registered from outside a module cannot inject dependencies since this is done outside the context of any module.
+   * In order to solve this issue, we can set up an interceptor directly in any module.
+   */
+  // app.useGlobalInterceptors(new LoggingInterceptor());
   await app.listen(3000);
 }
 bootstrap();

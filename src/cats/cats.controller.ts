@@ -17,6 +17,7 @@ import {
   DefaultValuePipe,
   UseGuards,
   SetMetadata,
+  UseInterceptors,
 } from '@nestjs/common';
 import { of, Observable } from 'rxjs';
 // import { Request } from 'express';
@@ -30,11 +31,16 @@ import { CustomForbiddenException } from '../exceptions/customForbidden.exceptio
 // import { AuthGuard } from 'src/guards/auth.guard';
 // import { RolesGuard } from 'src/guards/roles.guard';
 import { Roles } from 'src/decorators/roles.decorator';
+import { TransformInterceptor } from 'src/interceptors/transform.interceptor';
+import { ExcludeNullInterceptor } from 'src/interceptors/exclude-null.interceptor';
+// import { LoggingInterceptor } from 'src/interceptors/logging.interceptor';
+import { TimeoutInterceptor } from 'src/interceptors/timeout.interceptor';
 
 @Controller('cats')
 // @UseFilters(HttpExceptionFilter) //exception filters can be method scoped (use decorator above method), controller scoped (use decorator above class), or global scope (add in main.ts)
 // @UseGuards(AuthGuard)
 // @UseGuards(RolesGuard)
+// @UseInterceptors(LoggingInterceptor)
 export class CatsController {
   constructor(private catsService: CatsService) {} //
 
@@ -58,6 +64,7 @@ export class CatsController {
   // }
 
   @Get()
+  @UseInterceptors(TransformInterceptor)
   async findAll(): Promise<Cat[]> {
     return this.catsService.findAll();
   }
@@ -74,6 +81,12 @@ export class CatsController {
     @Query('page', new DefaultValuePipe(0), ParseIntPipe) page: number,
   ): string {
     return `The activeOnly status is ${activeOnly} and the page is ${page}.`;
+  }
+
+  @Get('null')
+  @UseInterceptors(ExcludeNullInterceptor)
+  findNull(): null {
+    return null;
   }
 
   @Get('neoncats')
@@ -105,6 +118,13 @@ export class CatsController {
   @Get('teapot')
   async testTeapot() {
     throw new ImATeapotException();
+  }
+
+  @Get('timeout')
+  @UseInterceptors(TimeoutInterceptor)
+  async getTimeout(): Promise<string> {
+    await new Promise((res, rej) => setTimeout(() => res(''), 6000));
+    return 'no timeout';
   }
 
   @Get(':id')
